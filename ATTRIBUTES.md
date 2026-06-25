@@ -40,11 +40,20 @@ The `type` is inferred from the JS value, so **numeric web-vital values serializ
 
 | Attribute | Type | On |
 |---|---|---|
+| `sentry.origin` | string | all — `auto.http.browser.{lcp,cls,inp,fcp,ttfb}` (set by the emitter, see below) |
 | `sentry.transaction` | string | all |
 | `user_agent.original` | string | all |
 | `sentry.pageload.span_id` | string | LCP, CLS, FCP, TTFB (and INP when a pageload span is active) |
 | `browser.web_vital.{vital}.value` | integer/double | all (mirrors the value; redundant with top-level `value`) |
 | `browser.web_vital.{vital}.rating` | string | all — `good` / `needs-improvement` / `poor` (proposed; not on the span today) |
+
+> **`sentry.origin` on metrics — precedent.** The metric *core pipeline* never invents an
+> origin (just like spans: core doesn't set it, the emitter does). But emitting `sentry.origin`
+> as a metric *attribute* is established: `nodeRuntimeMetrics` (`auto.node.runtime_metrics`),
+> `bunRuntimeMetrics`, `denoRuntimeMetrics`, and `elementTiming` (`auto.ui.browser.element_timing`)
+> all pass it. So web-vital metrics should set it too, matching the existing span origins
+> (`auto.http.browser.lcp` etc.). For span→metric conversion, Relay should **copy** the span's
+> `sentry.origin` so converted and native metrics carry it consistently.
 
 ## Per-vital attributes
 
@@ -90,7 +99,6 @@ These exist on the web-vital **span** but are span-structural / redundant and sh
 be copied onto the metric:
 
 - `sentry.op` (e.g. `ui.webvital.lcp`, `ui.interaction.click`) — used only for *matching*
-- `sentry.origin` (e.g. `auto.http.browser.lcp`) — used only for matching
 - `sentry.exclusive_time` — always `0` for the zero-duration vital spans
 - `sentry.segment.name`, `sentry.segment.id` — span tree structure
 - span `span_id` / `parent_span_id` / `start_timestamp` / `end_timestamp` / `is_segment`
@@ -117,15 +125,3 @@ Verified our captured output against the trace-metric spec. Full conformance:
 | `server.address` (backend SDKs only) | N/A (browser) | ✅ |
 | Name = hierarchical, dot-separated | `browser.web_vital.lcp` | ✅ |
 
-**Correction re: origin.** The metric *envelope structure* has no origin field and the SDK
-doesn't auto-attach one — but `sentry.origin` **is** a spec-recognized attribute key. It
-appears in the spec's canonical example as a normal typed attribute
-(`"sentry.origin": { "value": "auto.db.graphql", "type": "string" }`), classified as
-illustrative/custom, not a mandated default. So attaching
-`sentry.origin: "auto.http.browser.lcp"` to a web-vital metric would be spec-compliant —
-it just lives in `attributes`, not as a structural field, and nothing emits it today.
-
-**Note on `sentry.timestamp.sequence`.** The spec calls it "continuously incrementing",
-but the SDK (`utils/timestampSequence.ts`) **resets it to 0 whenever the integer-ms
-timestamp changes** — it's an intra-millisecond ordering counter, not a monotonic global
-counter. That's why our capture shows `0, 0, 1, 2, 0, …` rather than `0,1,2,3,4`.

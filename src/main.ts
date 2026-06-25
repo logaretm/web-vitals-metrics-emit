@@ -96,8 +96,12 @@ function rate(value: number, good: number, ni: number): Rating {
 const UA = navigator.userAgent;
 
 // Attributes common to every web-vital metric (mirrors _emitWebVitalSpan).
-function common(extra: Record<string, unknown>): Record<string, unknown> {
+// `origin` follows the precedent set by nodeRuntimeMetrics / elementTiming: the
+// emitter sets `sentry.origin` explicitly (the core pipeline never invents one),
+// matching the existing web-vital *span* origins.
+function common(origin: string, extra: Record<string, unknown>): Record<string, unknown> {
   return {
+    'sentry.origin': origin,
     'sentry.transaction': routeName(),
     'user_agent.original': UA,
     'sentry.pageload.span_id': pageloadSpanId(),
@@ -119,7 +123,7 @@ function emit(name: string, value: number, unit: string, attributes: Record<stri
 
 onLCP((metric: LCPMetric) => {
   const entry = metric.entries[metric.entries.length - 1];
-  emit('browser.web_vital.lcp', metric.value, 'millisecond', common({
+  emit('browser.web_vital.lcp', metric.value, 'millisecond', common('auto.http.browser.lcp', {
     'browser.web_vital.lcp.value': metric.value,
     'browser.web_vital.lcp.rating': rate(metric.value, 2500, 4000),
     'browser.web_vital.lcp.element': selector(entry?.element),
@@ -137,7 +141,7 @@ onCLS((metric: CLSMetric) => {
   entry?.sources?.forEach((s, i) => {
     sources[`browser.web_vital.cls.source.${i + 1}`] = selector(s.node);
   });
-  emit('browser.web_vital.cls', metric.value, 'none', common({
+  emit('browser.web_vital.cls', metric.value, 'none', common('auto.http.browser.cls', {
     'browser.web_vital.cls.value': metric.value,
     'browser.web_vital.cls.rating': rate(metric.value, 0.1, 0.25),
     ...sources,
@@ -146,7 +150,7 @@ onCLS((metric: CLSMetric) => {
 
 onINP((metric: INPMetric) => {
   const entry = metric.entries[metric.entries.length - 1];
-  emit('browser.web_vital.inp', metric.value, 'millisecond', common({
+  emit('browser.web_vital.inp', metric.value, 'millisecond', common('auto.http.browser.inp', {
     'browser.web_vital.inp.value': metric.value,
     'browser.web_vital.inp.rating': rate(metric.value, 200, 500),
     'browser.web_vital.inp.target': selector(entry?.target),
@@ -155,7 +159,7 @@ onINP((metric: INPMetric) => {
 }, { reportAllChanges: true });
 
 onFCP((metric: FCPMetric) => {
-  emit('browser.web_vital.fcp', metric.value, 'millisecond', common({
+  emit('browser.web_vital.fcp', metric.value, 'millisecond', common('auto.http.browser.fcp', {
     'browser.web_vital.fcp.value': metric.value,
     'browser.web_vital.fcp.rating': rate(metric.value, 1800, 3000),
   }));
@@ -163,7 +167,7 @@ onFCP((metric: FCPMetric) => {
 
 onTTFB((metric: TTFBMetric) => {
   const nav = metric.entries[0];
-  emit('browser.web_vital.ttfb', metric.value, 'millisecond', common({
+  emit('browser.web_vital.ttfb', metric.value, 'millisecond', common('auto.http.browser.ttfb', {
     'browser.web_vital.ttfb.value': metric.value,
     'browser.web_vital.ttfb.rating': rate(metric.value, 800, 1800),
     'browser.web_vital.ttfb.request_time': nav ? nav.responseStart - nav.requestStart : undefined,
