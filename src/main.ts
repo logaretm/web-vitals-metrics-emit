@@ -119,7 +119,6 @@ function emit(name: string, value: number, unit: string, attributes: Record<stri
 onLCP((metric: LCPMetric) => {
   const entry = metric.entries[metric.entries.length - 1];
   emit('browser.web_vital.lcp', metric.value, 'millisecond', common('auto.http.browser.lcp', {
-    'browser.web_vital.lcp.rating': metric.rating,
     'browser.web_vital.lcp.element': selector(entry?.element),
     'browser.web_vital.lcp.id': entry?.id || undefined,
     'browser.web_vital.lcp.url': entry?.url || undefined,
@@ -136,7 +135,6 @@ onCLS((metric: CLSMetric) => {
     sources[`browser.web_vital.cls.source.${i + 1}`] = selector(s.node);
   });
   emit('browser.web_vital.cls', metric.value, 'none', common('auto.http.browser.cls', {
-    'browser.web_vital.cls.rating': metric.rating,
     ...sources,
   }));
 }, { reportAllChanges: true });
@@ -144,22 +142,18 @@ onCLS((metric: CLSMetric) => {
 onINP((metric: INPMetric) => {
   const entry = metric.entries[metric.entries.length - 1];
   emit('browser.web_vital.inp', metric.value, 'millisecond', common('auto.http.browser.inp', {
-    'browser.web_vital.inp.rating': metric.rating,
     'browser.web_vital.inp.target': selector(entry?.target),
     'browser.web_vital.inp.type': entry?.name,
   }));
 }, { reportAllChanges: true });
 
 onFCP((metric: FCPMetric) => {
-  emit('browser.web_vital.fcp', metric.value, 'millisecond', common('auto.http.browser.fcp', {
-    'browser.web_vital.fcp.rating': metric.rating,
-  }));
+  emit('browser.web_vital.fcp', metric.value, 'millisecond', common('auto.http.browser.fcp', {}));
 });
 
 onTTFB((metric: TTFBMetric) => {
   const nav = metric.entries[0];
   emit('browser.web_vital.ttfb', metric.value, 'millisecond', common('auto.http.browser.ttfb', {
-    'browser.web_vital.ttfb.rating': metric.rating,
     'browser.web_vital.ttfb.request_time': nav ? nav.responseStart - nav.requestStart : undefined,
   }));
 });

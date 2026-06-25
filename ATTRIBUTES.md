@@ -44,13 +44,14 @@ The `type` is inferred from the JS value, so **numeric web-vital values serializ
 | `sentry.transaction` | string | all |
 | `user_agent.original` | string | all |
 | `sentry.pageload.span_id` | string | LCP, CLS, FCP, TTFB (and INP when a pageload span is active) |
-| `browser.web_vital.{vital}.rating` | string | all — `good` / `needs-improvement` / `poor`, from `web-vitals`' `metric.rating` (proposed; not on the span today) |
 
-> **No `browser.web_vital.{vital}.value` attribute on the metric.** The value is the metric's
-> top-level `value` field — a `.value` *attribute* would just duplicate it. It exists only on
-> the **span** because a span has no value field, so the v2 path carries the vital in
-> `browser.web_vital.{vital}.value` and Relay promotes that attribute to the metric's
-> top-level `value` during span→metric conversion. Native metrics don't need it.
+> **Dropped as derivable/redundant — not emitted:**
+> - `browser.web_vital.{vital}.value` — duplicates the metric's top-level `value`. It exists
+>   only on the **span** (spans have no value field); Relay reads it there and promotes it to
+>   the metric's `value` during span→metric conversion. Native metrics don't carry it.
+> - `browser.web_vital.{vital}.rating` (`good`/`needs-improvement`/`poor`) — a pure function
+>   of `value` and fixed `web-vitals` thresholds, which the backend already applies to compute
+>   performance scores. Recomputable from `value`, so not worth sending.
 
 > **`sentry.origin` on metrics — precedent.** The metric *core pipeline* never invents an
 > origin (just like spans: core doesn't set it, the emitter does). But emitting `sentry.origin`
