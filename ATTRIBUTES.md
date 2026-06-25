@@ -98,3 +98,34 @@ be copied onto the metric:
 
 And Relay should ADD on conversion (per RFC 0154):
 - `sentry.metric.source: "span"` — provenance / billing flag (omitted on SDK-native metrics)
+
+## Cross-reference: develop.sentry.dev/sdk/telemetry/metrics
+
+Verified our captured output against the trace-metric spec. Full conformance:
+
+| Spec requirement | Captured | OK |
+|---|---|---|
+| Envelope item `type: "trace_metric"` | ✓ (`metrics/envelope.ts:24`) | ✅ |
+| `content_type: "application/vnd.sentry.items.trace-metric+json"` | ✓ (`:26`) | ✅ |
+| Payload `version: 2` | ✓ (`:29`) | ✅ |
+| Required item fields: `timestamp`, `type`, `name`, `value`, `trace_id` | all present | ✅ |
+| Optional: `span_id`, `unit`, `attributes` | present (`span_id` absent on INP — allowed) | ✅ |
+| Metric types `counter` / `gauge` / `distribution` | `distribution` | ✅ |
+| Attribute encoding `{ "value", "type" }`, types `string`/`integer`/`double`/`boolean` | exact match | ✅ |
+| MUST attach `sentry.environment`, `sentry.release`, `sentry.sdk.name`, `sentry.sdk.version`, `sentry.timestamp.sequence` | all present | ✅ |
+| PII-guarded `user.id/name/email` (needs `sendDefaultPii`) | not set (correct) | ✅ |
+| `server.address` (backend SDKs only) | N/A (browser) | ✅ |
+| Name = hierarchical, dot-separated | `browser.web_vital.lcp` | ✅ |
+
+**Correction re: origin.** The metric *envelope structure* has no origin field and the SDK
+doesn't auto-attach one — but `sentry.origin` **is** a spec-recognized attribute key. It
+appears in the spec's canonical example as a normal typed attribute
+(`"sentry.origin": { "value": "auto.db.graphql", "type": "string" }`), classified as
+illustrative/custom, not a mandated default. So attaching
+`sentry.origin: "auto.http.browser.lcp"` to a web-vital metric would be spec-compliant —
+it just lives in `attributes`, not as a structural field, and nothing emits it today.
+
+**Note on `sentry.timestamp.sequence`.** The spec calls it "continuously incrementing",
+but the SDK (`utils/timestampSequence.ts`) **resets it to 0 whenever the integer-ms
+timestamp changes** — it's an intra-millisecond ordering counter, not a monotonic global
+counter. That's why our capture shows `0, 0, 1, 2, 0, …` rather than `0,1,2,3,4`.
