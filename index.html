@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Vitals → Metrics emit</title>
+    <style>
+      body { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin: 0; padding: 16px; background: #0e0e12; color: #e6e6ea; }
+      h1 { font-size: 16px; margin: 0 0 8px; }
+      .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+      button { background: #6c5ce7; color: #fff; border: 0; padding: 8px 12px; border-radius: 6px; cursor: pointer; font: inherit; }
+      button:hover { background: #5a4bd6; }
+      #hero { display: block; width: 640px; max-width: 100%; height: auto; border-radius: 8px; }
+      .shifter { background: #1c1c24; border: 1px solid #2a2a36; border-radius: 8px; padding: 12px; margin: 12px 0; }
+      #cls-injected { color: #ffb86c; }
+      pre { background: #16161c; border: 1px solid #2a2a36; border-radius: 8px; padding: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+      .metric { margin-bottom: 12px; }
+      .metric h2 { font-size: 13px; color: #8be9fd; margin: 0 0 4px; }
+      #status { color: #50fa7b; }
+    </style>
+  </head>
+  <body>
+    <h1>Web Vitals → Trace Metrics (as the SDK would emit)</h1>
+    <p id="status">initializing…</p>
+    <div class="controls">
+      <button id="btn-cls">Trigger layout shift (CLS)</button>
+      <button id="btn-inp">Slow click (INP)</button>
+      <button id="btn-flush">Flush web vitals (visibilitychange → hidden)</button>
+      <button id="btn-dump">Dump captured metrics JSON</button>
+    </div>
+
+    <!-- LCP candidate: large image -->
+    <img id="hero" alt="hero" />
+
+    <div class="shifter" id="shifter">
+      <p>Content above the injected block. Clicking "Trigger layout shift" inserts a tall block here to cause CLS.</p>
+      <div id="cls-target"></div>
+    </div>
+
+    <div class="metric">
+      <h2>Captured metric envelope items</h2>
+      <pre id="out">(none yet)</pre>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
