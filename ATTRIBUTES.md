@@ -92,7 +92,7 @@ The `type` is inferred from the JS value, so **numeric web-vital values serializ
 > natively-emitted metrics.
 
 ### FCP — `browser.web_vital.fcp`, distribution, `millisecond`
-Only the common attributes + `value` + `rating`. No detail attributes.
+Only the common attributes. No detail attributes.
 
 ### TTFB — `browser.web_vital.ttfb`, distribution, `millisecond`
 | Attribute | Type | Example |
@@ -104,6 +104,9 @@ Only the common attributes + `value` + `rating`. No detail attributes.
 These exist on the web-vital **span** but are span-structural / redundant and should not
 be copied onto the metric:
 
+- `browser.web_vital.{vital}.value` — **read it as the value source** and promote it to the
+  metric's top-level `value` field; do **not** also copy it into the metric's `attributes`
+  (it would duplicate the top-level `value`).
 - `sentry.op` (e.g. `ui.webvital.lcp`, `ui.interaction.click`) — used only for *matching*
 - `sentry.exclusive_time` — always `0` for the zero-duration vital spans
 - `sentry.segment.name`, `sentry.segment.id` — span tree structure

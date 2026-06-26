@@ -12,7 +12,7 @@ exact attribute list each metric carries.
   source the SDK vendors.
 - Domain attributes mirror today's web-vital **span** attributes
   (`packages/browser-utils/src/metrics/webVitalSpans.ts`), namespaced under
-  `browser.web_vital.*`, plus the proposed `rating` and INP `target`/`type`.
+  `browser.web_vital.*`.
 
 ## Run
 
